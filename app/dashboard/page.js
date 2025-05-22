@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { signOut } from 'next-auth/react'
 
 export default function Dashboard() {
     const [clients, setClients] = useState([])
@@ -52,6 +53,11 @@ export default function Dashboard() {
                     <Link href="/clients">
                         <span className="px-4 py-2  border border-[#333] bg-[#181818] hover:bg-black transition">View All Clients</span>
                     </Link>
+                    <button
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                    >
+                        <span className="px-4 py-2  border border-[#333] bg-[#181818] hover:bg-black transition">Logout</span>
+                    </button>
                 </div>
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

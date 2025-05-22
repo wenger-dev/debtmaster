@@ -1,7 +1,7 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { connectDB } from '@/utils/db'
 import User from '@/models/User'
-
+import bcrypt from 'bcryptjs'
 const authOptions = {
     providers: [
         CredentialsProvider({
@@ -13,8 +13,12 @@ const authOptions = {
             async authorize(credentials) {
                 await connectDB()
                 const user = await User.findOne({ email: credentials.email })
-                if (user && user.password === credentials.password) {
-                    return { id: user._id, email: user.email }
+                
+                if (user) {
+                    const match_password = await bcrypt.compare(credentials.password,user.password)
+                    if (match_password) {
+                        return { id: user._id, email: user.email }
+                    }
                 }
                 return null
             }
