@@ -10,6 +10,53 @@ export default function ClientProfile() {
     const [debts, setDebts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [copiedDebtId, setCopiedDebtId] = useState(null)
+
+    function formatCurrency(number) {
+        try {
+            return Number(number).toLocaleString() + ' RWF'
+        } catch {
+            return `${number} RWF`
+        }
+    }
+
+    function formatDate(value) {
+        try {
+            const d = new Date(value)
+            const dd = String(d.getDate()).padStart(2, '0')
+            const mm = String(d.getMonth() + 1).padStart(2, '0')
+            const yyyy = d.getFullYear()
+            return `${dd}/${mm}/${yyyy}`
+        } catch {
+            return String(value)
+        }
+    }
+
+    function formatDebtSmsText(clientObj, debtObj) {
+        const total = (debtObj.products || []).reduce((sum, p) => sum + (Number(p.price) * Number(p.quantity)), 0)
+        const paid = (debtObj.payments || []).reduce((sum, p) => sum + Number(p.amount), 0)
+        const due = total - paid
+
+        const header = `Debt for ${clientObj?.name} (${clientObj?.phone})`
+        const dates = `Taken: ${formatDate(debtObj.takenDate)} | Due: ${formatDate(debtObj.dueDate)}`
+        const lines = (debtObj.products || []).map(p => `- ${p.name} | ${formatCurrency(p.price)} * ${p.quantity} = ${formatCurrency(Number(p.price) * Number(p.quantity))}`)
+        const totals = `Total: ${formatCurrency(total)} | Paid: ${formatCurrency(paid)} | Due: ${formatCurrency(due)}`
+
+        // Keep SMS-friendly, single text block
+        return [header, dates, ...lines, totals].join('\n')
+    }
+
+    async function handleCopyDebt(debt) {
+        try {
+            const text = formatDebtSmsText(client, debt)
+            await navigator.clipboard.writeText(text)
+            setCopiedDebtId(debt._id)
+            setTimeout(() => setCopiedDebtId(null), 1500)
+        } catch (e) {
+            setError('Failed to copy text')
+            setTimeout(() => setError(''), 1500)
+        }
+    }
 
     useEffect(() => {
         async function fetchData() {
@@ -120,6 +167,12 @@ export default function ClientProfile() {
                                                 <Link href={`/debts/${debt._id}/add-payment`}>
                                                     <span className="px-3 py-1  border border-[#333] bg-[#181818] hover:bg-black transition text-sm">Add Payment</span>
                                                 </Link>
+                                                <button
+                                                    onClick={() => handleCopyDebt(debt)}
+                                                    className="ml-2 px-3 py-1  border border-[#333] bg-[#181818] hover:bg-black transition text-sm"
+                                                >
+                                                    {copiedDebtId === debt._id ? 'Copied' : 'Copy'}
+                                                </button>
                                             </div>
                                         </li>
                                     )
