@@ -20,6 +20,14 @@ export default function ClientProfile() {
         }
     }
 
+    function formatNumber(number) {
+        try {
+            return Number(number).toLocaleString()
+        } catch {
+            return String(number)
+        }
+    }
+
     function formatDate(value) {
         try {
             const d = new Date(value)
@@ -39,8 +47,8 @@ export default function ClientProfile() {
 
         const header = `Debt for ${clientObj?.name} (${clientObj?.phone})`
         const dates = `Taken: ${formatDate(debtObj.takenDate)} | Due: ${formatDate(debtObj.dueDate)}`
-        const lines = (debtObj.products || []).map(p => `- ${p.name} | ${formatCurrency(p.price)} * ${p.quantity} = ${formatCurrency(Number(p.price) * Number(p.quantity))}`)
-        const totals = `Total: ${formatCurrency(total)} | Paid: ${formatCurrency(paid)} | Due: ${formatCurrency(due)}`
+        const lines = (debtObj.products || []).map(p => `${p.name} ${formatNumber(p.price)}*${p.quantity}=${formatNumber(Number(p.price) * Number(p.quantity))}`)
+        const totals = `Total: ${formatCurrency(total)} | Paid: ${formatCurrency(paid)}`
 
         // Keep SMS-friendly, single text block
         return [header, dates, ...lines, totals].join('\n')
